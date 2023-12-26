@@ -11,8 +11,13 @@ function QueryForm()
     // replies from chatGPT
     const [chatlog,setChatlog] = useState([]);
 
-    const printedLogs = chatlog.map(string => {
-        return(<li>{string}</li>);
+    const printedLogs = chatlog.map(chatInstance => {
+        return(
+            <div>
+                <li>{chatInstance.textReply}</li>
+                <audio src={chatInstance.audioBlob} controls></audio>
+            </div>
+        );
     })
 
     // changes query variable as the content of the
@@ -29,21 +34,40 @@ function QueryForm()
     function postQuery(e)
     {
         e.preventDefault();
-        setChatlog(chatlog => [...chatlog,query])
+        const newQuery = {'textReply': query, 'audioBlob': ''};
+        setChatlog(chatlog => [...chatlog,newQuery])
         const headers = {'Content-Type': 'application/json'};
         const body = {'query':query,'parentMessageId':conversationID}
-        console.log("Sending request");
-        console.log(`request text is ${query}`);
-        console.log(`request id is ${conversationID}`);
         fetch('http://localhost:3001/post_query',{body:JSON.stringify(body),method:'POST',headers:headers})
         .then(reply => reply.json())
         .then(
             reply_jsonified => {
-                setChatlog(chatlog => [...chatlog,reply_jsonified.text.text]);
-                setConversationID(reply_jsonified.text.id);
-                console.log("received response");
-                console.log(`response text is ${reply_jsonified.text.text}`);
-                console.log(`response id is ${reply_jsonified.text.id}`);
+                // reply_jsonified is a dictionary with
+                // two labels: myText and myAudio
+                
+                // myText stores the written response from chatGPT
+                // along with a bunch of metadata.
+                const myText = reply_jsonified.myText;
+
+                // myText then has some labels like
+                // 'id' which we'll put into our conversationID
+                // variable, and 'text' which contains the
+                // actual text reply
+                const textReply = myText.text;
+                const textID = myText.id;
+                
+                // myAudio just stores an audio BLOB of the written response
+                // converted into speech. Convert this into an object URL.
+                const audioBlob = reply_jsonified.myAudio;
+                const audioBlobObject = new Blob([new Uint8Array(audioBlob)], { type: 'audio/mpeg' });
+                const audioURL = URL.createObjectURL(audioBlobObject);
+
+                // we want to pass dictionary containing the response's
+                // text and tts url into chatlog.
+                const newChat = {'textReply': textReply, 'audioBlob': audioURL};
+                
+                setChatlog(chatlog => [...chatlog,newChat]);
+                setConversationID(textID);
             }
         )
     }
