@@ -1,0 +1,10 @@
+body {
+    height:100vh;
+    border:1px solid black;
+}
+
+.conversation-wrapper {
+    height:30vh;
+    overflow:auto;
+    background-color:lightgreen;
+}

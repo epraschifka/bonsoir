@@ -1,41 +1,15 @@
-import { useState } from 'react'
-import "../App.css";
+import React, { useState, useEffect } from 'react';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import { useReactMediaRecorder } from 'react-media-recorder';
+import Recorder from "./Recorder";
 
-function QueryForm()
-{
-    // current query to be asked
-    const [query,setQuery] = useState('');
-    const [conversationID,setConversationID] = useState('');
+const Phone = () => {
+  const [chatlog, setChatlog] = useState([]);
+  const [query,setQuery] = useState('');
+  const [conversationID,setConversationID] = useState('');
 
-    // chatlog of previous queries and
-    // replies from chatGPT
-    const [chatlog,setChatlog] = useState([]);
-
-    const printedLogs = chatlog.map(chatInstance => {
-        return(
-            <div>
-                <li>{chatInstance.textReply}</li>
-                <audio src={chatInstance.audioBlob} controls></audio>
-            </div>
-        );
-    })
-
-    // changes query variable as the content of the
-    // textbox changes
-    function changeQuery(e)
-    {
-        setQuery(e.target.value)
-    }
-
-    // posts the current query to the server
-    // and updates chatlog with query.
-    // Returns chatGPT's reply from the server 
-    // and updates chatlog
-    function postQuery(e)
-    {
-        e.preventDefault();
-        const newQuery = {'textReply': query, 'audioBlob': ''};
-        setChatlog(chatlog => [...chatlog,newQuery])
+  function postQuery()
+  {
         const headers = {'Content-Type': 'application/json'};
         const body = {'query':query,'parentMessageId':conversationID}
         fetch('http://localhost:3001/post_query',{body:JSON.stringify(body),method:'POST',headers:headers})
@@ -68,21 +42,55 @@ function QueryForm()
                 
                 setChatlog(chatlog => [...chatlog,newChat]);
                 setConversationID(textID);
-            }
+          }
         )
-    }
+  }
 
+  const {
+    transcript,
+    interimTranscript,
+    finalTranscript,
+    resetTranscript,
+    listening,
+    browserSupportsSpeechRecognition
+  } = useSpeechRecognition();
+
+  const printedLogs = chatlog.map(chatInstance => {
     return(
-    <div>
-        <form onSubmit={postQuery}>
-            <textarea className='query-field' onChange={changeQuery} value={query}></textarea>
-            <input type='submit'></input>
-        </form>
-        <ul>
-            {printedLogs}
-        </ul>
-    </div>
-    )
-}
+        <div>
+            <li>{chatInstance.textReply}</li>
+            <audio src={chatInstance.audioBlob} controls></audio>
+        </div>
+    );
+  })
 
-export default QueryForm;
+  useEffect(() => {
+    if (finalTranscript)
+    {
+        setChatlog([...chatlog,{'textReply': finalTranscript, 'audioBlob':''}]);
+        setQuery(finalTranscript);
+    }
+  }, [finalTranscript])
+
+  useEffect(() => {
+    if (query)
+    {
+        postQuery();
+    }
+  }, [query])
+
+  if (!browserSupportsSpeechRecognition) {
+    return <span>Browser doesn't support speech recognition.</span>;
+  }
+
+  return (
+    <div>
+      <div className='conversation-wrapper'>{printedLogs}</div>
+      <p>Microphone: {listening ? 'on' : 'off'}</p>
+      <button onClick={() => SpeechRecognition.startListening({ language: 'fr-FR'})}>Start</button>
+      <button onClick={SpeechRecognition.stopListening}>Stop</button>
+      <button onClick={resetTranscript}>Reset</button>
+    </div>
+  );
+};
+export default Phone;

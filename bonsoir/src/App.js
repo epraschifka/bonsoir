@@ -1,9 +1,10 @@
-import QueryForm from "./components/QueryForm";
+import Phone from "./components/Phone";
+import './css/Phone.css'
 
 function App() {
   return (
     <div>
-      <QueryForm/>
+      <Phone/>
     </div>
   );
 }
