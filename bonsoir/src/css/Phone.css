@@ -1,10 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
+
 body {
-    height:100vh;
+    height:80vh;
+    font-family: 'Roboto', sans-serif;
+    padding:50px;
     border:1px solid black;
 }
 
+.app-wrapper {
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
 .conversation-wrapper {
-    height:30vh;
+    height:70vh;
+    width: 50vw;
     overflow:auto;
     background-color:lightgreen;
+    list-style-type: none;
+    padding:20px;
+    font-size:20px;
+    display:grid;
+}
+
+.chatInstance-container {
+    min-height:200px;
+    display:flex;
+}
+
+.chatInstance {
+    width:50%;
+}
+
+.robot {
+    justify-content: end;
 }
