@@ -21,11 +21,9 @@ body {
     list-style-type: none;
     padding:20px;
     font-size:20px;
-    display:grid;
 }
 
 .chatInstance-container {
-    min-height:200px;
     display:flex;
 }
 
